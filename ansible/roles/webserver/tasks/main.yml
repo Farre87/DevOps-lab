@@ -1,0 +1,109 @@
+---
+- name: Uppdatera apt
+  apt:
+    update_cache: yes
+
+- name: Installera nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: Skapa SSL-mapp
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    mode: '0755'
+
+- name: Kopiera webserver certifikat
+  copy:
+    src: /vagrant/webserver.crt
+    dest: /etc/nginx/ssl/webserver.crt
+
+- name: Kopiera webserver nyckel
+  copy:
+    src: /vagrant/webserver.key
+    dest: /etc/nginx/ssl/webserver.key
+    mode: '0600'
+
+- name: Kopiera CA certifikat
+  copy:
+    src: /vagrant/ca.crt
+    dest: /etc/nginx/ssl/ca.crt
+
+- name: Konfigurera nginx
+  copy:
+    dest: /etc/nginx/sites-available/devops-lab
+    content: |
+      server {
+          listen 80;
+          server_name 192.168.56.21;
+          return 301 https://$host$request_uri;
+      }
+
+      server {
+          listen 443 ssl;
+          server_name 192.168.56.21;
+
+          ssl_certificate     /etc/nginx/ssl/webserver.crt;
+          ssl_certificate_key /etc/nginx/ssl/webserver.key;
+
+          location / {
+              root /var/www/html;
+              index index.html;
+          }
+      }
+
+- name: Aktivera nginx site
+  file:
+    src: /etc/nginx/sites-available/devops-lab
+    dest: /etc/nginx/sites-enabled/devops-lab
+    state: link
+
+- name: Ta bort default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Skapa index.html
+  copy:
+    dest: /var/www/html/index.html
+    content: |
+      <html>
+        <body>
+          <h1>DevOps-Lab fungerar!</h1>
+          <p>nginx + HTTPS ar konfigurerat!</p>
+        </body>
+      </html>
+
+- name: Starta om nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: Installera UFW
+  apt:
+    name: ufw
+    state: present
+
+- name: Tillat SSH port 22
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Tillat HTTP port 80
+  ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+
+- name: Tillat HTTPS port 443
+  ufw:
+    rule: allow
+    port: '443'
+    proto: tcp
+
+- name: Aktivera UFW
+  ufw:
+    state: enabled
+    policy: deny
