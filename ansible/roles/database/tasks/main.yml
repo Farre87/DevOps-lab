@@ -1,0 +1,50 @@
+---
+- name: Uppdatera apt
+  apt:
+    update_cache: yes
+
+- name: Installera PostgreSQL
+  apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+
+- name: Starta PostgreSQL
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Skapa databas devops_db
+  shell: sudo -u postgres psql -c "CREATE DATABASE devops_db;" 2>/dev/null || true
+
+- name: Skapa anvandare devops_user
+  shell: sudo -u postgres psql -c "CREATE USER devops_user WITH PASSWORD 'devops123';" 2>/dev/null || true
+
+- name: Ge rattigheter till devops_user
+  shell: sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE devops_db TO devops_user;" 2>/dev/null || true
+
+- name: Installera UFW
+  apt:
+    name: ufw
+    state: present
+
+- name: Tillat SSH port 22
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Tillat PostgreSQL port 5432 fran control
+  ufw:
+    rule: allow
+    port: '5432'
+    proto: tcp
+    src: 192.168.56.20
+
+- name: Aktivera UFW
+  ufw:
+    state: enabled
+    policy: deny

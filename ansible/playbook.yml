@@ -4,3 +4,9 @@
   become: yes
   roles:
     - webserver
+
+- name: Konfigurera database
+  hosts: databases
+  become: yes
+  roles:
+    - database
