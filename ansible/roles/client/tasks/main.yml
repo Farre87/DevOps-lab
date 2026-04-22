@@ -1,0 +1,36 @@
+---
+- name: Uppdatera apt
+  apt:
+    update_cache: yes
+
+- name: Installera verktyg pa client
+  apt:
+    name:
+      - curl
+      - wget
+      - net-tools
+    state: present
+
+- name: Kopiera CA certifikat till client
+  copy:
+    src: /vagrant/ca.crt
+    dest: /usr/local/share/ca-certificates/devops-lab-ca.crt
+
+- name: Uppdatera certifikat
+  shell: update-ca-certificates
+
+- name: Testa webserver med HTTP
+  shell: curl -o /dev/null -s -w "%{http_code}" http://192.168.56.21
+  register: http_result
+
+- name: Visa HTTP resultat
+  debug:
+    msg: "HTTP status kod: {{ http_result.stdout }}"
+
+- name: Testa webserver med HTTPS
+  shell: curl -o /dev/null -s -w "%{http_code}" https://192.168.56.21
+  register: https_result
+
+- name: Visa HTTPS resultat
+  debug:
+    msg: "HTTPS status kod: {{ https_result.stdout }}"

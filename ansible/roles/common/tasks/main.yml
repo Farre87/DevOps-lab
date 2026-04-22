@@ -1,0 +1,30 @@
+---
+- name: Uppdatera apt
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Installera grundlaggande verktyg
+  apt:
+    name:
+      - curl
+      - wget
+      - net-tools
+      - vim
+      - ufw
+    state: present
+
+- name: Satt tidszon till Stockholm
+  timezone:
+    name: Europe/Stockholm
+
+- name: Tillat SSH port 22
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Aktivera UFW
+  ufw:
+    state: enabled
+    policy: deny

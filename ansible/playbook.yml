@@ -1,4 +1,10 @@
 ---
+- name: Konfigurera alla servrar
+  hosts: all
+  become: yes
+  roles:
+    - common
+
 - name: Konfigurera webserver
   hosts: webservers
   become: yes
@@ -10,3 +16,9 @@
   become: yes
   roles:
     - database
+
+- name: Konfigurera client
+  hosts: clients
+  become: yes
+  roles:
+    - client
